@@ -15,6 +15,7 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import gregtech.api.interfaces.tileentity.WailaTip;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFire;
 import net.minecraft.entity.Entity;
@@ -654,6 +655,15 @@ public class BaseMetaTileEntity extends CommonMetaTileEntity
     @Override
     public void getWailaBody(ItemStack itemStack, List<String> currentTip, IWailaDataAccessor accessor,
         IWailaConfigHandler config) {
+        if (hasValidMetaTileEntity()) {
+            getMetaTileEntity().getWailaBody(itemStack, currentTip, accessor, config);
+        }
+        super.getWailaBody(itemStack, currentTip, accessor, config);
+    }
+
+    @Override
+    public void getWailaBody(ItemStack itemStack, WailaTip currentTip, IWailaDataAccessor accessor,
+                             IWailaConfigHandler config) {
         if (hasValidMetaTileEntity()) {
             getMetaTileEntity().getWailaBody(itemStack, currentTip, accessor, config);
         }

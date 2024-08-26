@@ -20,12 +20,14 @@ import static gregtech.api.enums.Textures.BlockIcons.OVERLAY_FRONT_MULTI_AUTOCLA
 import static gregtech.api.util.GT_StructureUtility.buildHatchAdder;
 import static gregtech.api.util.GT_StructureUtility.ofCoil;
 import static gregtech.api.util.GT_StructureUtility.ofFrame;
+import static gregtech.api.util.GT_Waila.getMachineSpeedString;
 
 import java.text.DecimalFormat;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import gregtech.api.interfaces.tileentity.WailaTip;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -74,6 +76,8 @@ public class GT_MetaTileEntity_MultiAutoclave extends
     public GT_MetaTileEntity_MultiAutoclave(String aName) {
         super(aName);
     }
+
+    private WailaTip currentTip = new WailaTip();
 
     private HeatingCoilLevel heatLevel;
 
@@ -235,6 +239,33 @@ public class GT_MetaTileEntity_MultiAutoclave extends
         itemPipeTier = -2;
         mCasingAmount = 0;
         mEnergyHatches.clear();
+        currentTip.clearList();
+        currentTip.addNumberTip(
+            StatCollector.translateToLocal("GT5U.multiblock.fluidPipeTier") + ": ",
+            EnumChatFormatting.WHITE,
+            Math.max(0, fluidPipeTier));
+        currentTip.add(
+            StatCollector.translateToLocal("GT5U.multiblock.euModifier") + ": ",
+            EnumChatFormatting.WHITE,
+            dfTwo.format(Math.max(0, euModifier(fluidPipeTier) * 100))
+                + "%");
+        currentTip.addNumberTip(
+            StatCollector.translateToLocal("GT5U.multiblock.itemPipeTier") + ": ",
+            EnumChatFormatting.WHITE,
+            Math.max(0, itemPipeTier));
+        currentTip.add(
+            StatCollector.translateToLocal("GT5U.multiblock.parallelism") + ": ",
+            EnumChatFormatting.WHITE,
+            dfNone.format(Math.max(0, getMaxParallelRecipes())));
+        currentTip.addNumberTip(
+            StatCollector.translateToLocal("GT5U.multiblock.coilLevel") + ": ",
+            EnumChatFormatting.WHITE,
+            Math.max(0, getCoilTier()));
+        currentTip.add(
+            StatCollector.translateToLocal("GT5U.multiblock.speed") + ": ",
+            EnumChatFormatting.WHITE,
+            dfNone.format(Math.max(0, 100 / speedBoost(getCoilTier())))
+                + "%");
         setCoilLevel(HeatingCoilLevel.None);
         if (!checkPiece(STRUCTURE_PIECE_MAIN, 3, 6, 0)) return false;
         return this.mMaintenanceHatches.size() == 1 && fluidPipeTier >= 0
@@ -331,50 +362,14 @@ public class GT_MetaTileEntity_MultiAutoclave extends
         }.setMaxParallelSupplier(this::getMaxParallelRecipes);
     }
 
-    @Override
-    public void getWailaNBTData(EntityPlayerMP player, TileEntity tile, NBTTagCompound tag, World world, int x, int y,
-        int z) {
-        super.getWailaNBTData(player, tile, tag, world, x, y, z);
-        tag.setInteger("fluidPipeTier", getFluidPipeTier());
-        tag.setInteger("itemPipeTier", getItemPipeTier());
-        tag.setInteger("coilTier", getCoilTier());
-        tag.setFloat("getMaxParallelRecipes", getMaxParallelRecipes());
-    }
-
     private static final DecimalFormat dfTwo = new DecimalFormat("0.00");
     private static final DecimalFormat dfNone = new DecimalFormat("#");
 
+
     @Override
-    public void getWailaBody(ItemStack itemStack, List<String> currenttip, IWailaDataAccessor accessor,
-        IWailaConfigHandler config) {
-        super.getWailaBody(itemStack, currenttip, accessor, config);
-        NBTTagCompound tag = accessor.getNBTData();
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.fluidPipeTier") + ": "
-                + EnumChatFormatting.WHITE
-                + Math.max(0, tag.getInteger("fluidPipeTier")));
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.euModifier") + ": "
-                + EnumChatFormatting.WHITE
-                + dfTwo.format(Math.max(0, euModifier(tag.getInteger("fluidPipeTier")) * 100))
-                + "%");
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.itemPipeTier") + ": "
-                + EnumChatFormatting.WHITE
-                + Math.max(0, tag.getInteger("itemPipeTier")));
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.parallelism") + ": "
-                + EnumChatFormatting.WHITE
-                + dfNone.format(Math.max(0, tag.getFloat("getMaxParallelRecipes"))));
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.coilLevel") + ": "
-                + EnumChatFormatting.WHITE
-                + Math.max(0, tag.getInteger("coilTier")));
-        currenttip.add(
-            StatCollector.translateToLocal("GT5U.multiblock.speed") + ": "
-                + EnumChatFormatting.WHITE
-                + dfNone.format(Math.max(0, 100 / speedBoost(tag.getInteger("coilTier"))))
-                + "%");
+    public void getWailaBody(ItemStack itemStack, List<String> tip, IWailaDataAccessor accessor,
+                             IWailaConfigHandler config) {
+        super.getWailaBody(itemStack, this.currentTip, accessor, config);
     }
 
     @Override

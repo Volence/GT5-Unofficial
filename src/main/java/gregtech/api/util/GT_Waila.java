@@ -1,5 +1,8 @@
 package gregtech.api.util;
 
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
+
 public abstract class GT_Waila {
 
     public static String getMachineProgressString(boolean isActive, int maxProgresstime, int progresstime) {
@@ -18,6 +21,15 @@ public abstract class GT_Waila {
             .append(GT_Utility.formatNumbers((Math.round((double) progresstime / maxProgresstime * 1000) / 10.0)))
             .append("%)");
 
+        return ret.toString();
+    }
+
+    public static String getMachineSpeedString(String langSelector, EnumChatFormatting color, String speed) {
+        StringBuilder ret = new StringBuilder(StatCollector.translateToLocal("GT5U.multiblock.speed"))
+            .append(": ")
+            .append(color)
+            .append(speed)
+            .append("%");
         return ret.toString();
     }
 }
